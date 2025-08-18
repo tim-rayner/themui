@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - libs/*
+  - packages/*
+
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - esbuild
+  - nx
+  - sharp

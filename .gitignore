@@ -8,6 +8,10 @@ out-tsc
 # dependencies
 node_modules
 
+# pnpm
+.pnpm
+pnpm-debug.log*
+
 # IDEs and editors
 /.idea
 .project
@@ -42,3 +46,7 @@ Thumbs.db
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# Next.js
+.next
+out
