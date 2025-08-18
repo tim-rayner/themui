@@ -1,5 +1,9 @@
 # SYSTEM DESIGN DOCUMENT (SDD) - Themui
 
+### Note:
+
+I am deliberately over-engineering this app, to practice my application infrastructure and design foundations. I've also never got a google AdSense app working before, so hoping this strategy also ensures all regulations are met before release.
+
 ## 1.0 Overview
 
 **Themui** is a developer-facing SaaS tool that converts screenshots (websites, apps, wireframes, etc) into Material UI (MUI) themes. The platform will:
