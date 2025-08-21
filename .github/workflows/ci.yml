@@ -28,7 +28,7 @@ jobs:
       # Setup pnpm
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -36,7 +36,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
