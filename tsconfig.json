@@ -8,6 +8,9 @@
     },
     {
       "path": "./apps/web-marketing"
+    },
+    {
+      "path": "./packages/web-marketing"
     }
   ]
 }

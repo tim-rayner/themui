@@ -1,0 +1,332 @@
+## 0) Project Snapshot
+
+- **Name:** Themui — Screenshot → MUI theme generator
+- **Architecture:** Single **Next.js 15 (App Router, React 19)** app inside **Nx** workspace
+- **Hosting:** Vercel (edge for marketing, node for generation routes)
+- **Auth/DB:** Supabase (Auth + Postgres + RLS)
+- **Storage:** UploadThing → S3 or Supabase Storage
+- **Payments:** Stripe Checkout + Webhooks
+- **UI:** Material UI + Tailwind (utility layout only)
+- **Goals:** SEO-first, Google Ads-friendly, fast MVP, low infra cost, Pro subscription
+- **Non-goals (MVP):** microservices, complex queues, complex editors
+
+> AI: Always optimize for **SEO, CWV (LCP/CLS/INP)**, **ad safety**, and **profitability**. Prefer simple, production-grade solutions over clever abstractions.
+
+---
+
+## 1) Repo Layout & Boundaries
+
+Keep everything in a single Next app within Nx.
+
+```
+/apps/themui                # Next.js app (marketing + app)
+/libs/ui                    # shared UI (ad-safe layouts, upload widget, palette editor)
+/libs/core                  # types, validation, theme builders, helpers
+/libs/analytics             # GA4 + Google Ads helpers (tiny, no heavy deps)
+```
+
+**Rules**
+
+- Marketing pages live under `/apps/themui/src/app/(marketing)/...`
+- App (tool) pages live under `/apps/themui/src/app/(app)/...`
+- Only create a new lib when reuse emerges (≥2 places).
+- Do NOT add new global state libraries; use React state + Server Actions.
+- Keep **route handlers** small and validated with **Zod**.
+
+---
+
+## 2) Tech Constraints
+
+- Next.js App Router, React 19, TypeScript strict mode.
+- MUI components; Tailwind for layout utilities only (spacing, flex/grid).
+- GA4 + Google Ads scripts must **not** harm CLS. Always reserve slot sizes.
+- Use **Server Actions** for mutations; **Route Handlers** for integrations (Stripe, webhooks).
+- Avoid node-only packages in edge routes. Generation runs on **node runtime**.
+
+---
+
+## 3) Code Style
+
+- **ESLint + Prettier**: follow defaults; no bikeshedding.
+- **Conventional Commits**: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`.
+- **Imports**: absolute `@/` from app root; `@ui`, `@core`, `@analytics` from libs.
+- **Naming**: React components `PascalCase`, hooks `useX`, route handlers `lowercase`.
+- **Types**: prefer `z.infer` types from Zod schemas at the edge of the system.
+- **Null safety**: narrow early; return typed errors.
+
+---
+
+## 4) Security & Privacy
+
+- Enforce **RLS** on Supabase tables.
+- Use **signed URLs** for any private asset access.
+- Validate all inputs via **Zod** (server actions & routes).
+- Apply **CSP** with allowlists (GA, Ads, UploadThing, Stripe).
+- Implement **Consent Mode v2** and do not send personalized ads/events without consent.
+- Strip PII from logs; keep analytics minimal and aggregated.
+
+---
+
+## 5) Ads & SEO Rules
+
+### Ads
+
+- Ads only on **marketing** pages at MVP.
+- Fixed-size ad containers to prevent CLS.
+- Lazy-load below the fold; defer third-party scripts until after main content.
+
+### SEO
+
+- File per page: metadata, canonical, JSON-LD when applicable.
+- Add `/sitemap.xml`, `/robots.txt`, OG images, and FAQ schema on `/faq`.
+- Use meaningful URL slugs; avoid query-only pages for content we want indexed.
+- Keep LCP < 2.5s on 4G; avoid heavy images and unnecessary JS.
+
+---
+
+## 6) Performance
+
+- Prefer **static** or **ISR** for marketing routes.
+- Use **node runtime** for `/api/generate` only.
+- Caching: start with default caching; add header-based caching later if needed.
+- Rate limiting: MVP in-memory per-IP; later Upstash Redis.
+
+---
+
+## 7) Testing & Quality
+
+- Use **Vitest** for unit tests; **@testing-library/react** for components.
+- Minimal, high-value tests:
+  - theme builder (palette generation, contrast)
+  - palette editor state updates
+  - route input validation (Zod) and error paths
+- Add a **Playwright** smoke test for core flow (upload → generate → sign-in gate).
+
+**Example Test Prompt**
+
+> AI, create Vitest tests for `buildMuiPalette.ts` covering:
+>
+> - dominant color mapping to primary
+> - contrast ratio >= 4.5 for text.primary on background.default
+> - fallback palette when extraction fails
+
+---
+
+## 8) Analytics Events (GA4)
+
+Fire **server-side** when possible:
+
+- `upload_started`, `upload_succeeded`
+- `generate_started`, `generate_succeeded`
+- `download_clicked`
+- `checkout_started`, `purchase_succeeded`
+
+Attach minimal metadata (e.g., file size bucket, palette length). Never send raw URLs or PII.
+
+---
+
+## 9) Auth & Usage Limits
+
+- Supabase Auth (Google + Email OTP).
+- Gate full theme download to **signed-in** users.
+- Free tier: **1 generation/day** (configurable). Pro: higher caps.
+- Implement server-side checks for limits; never trust client-only state.
+
+---
+
+## 10) Payments
+
+- **Stripe Checkout** for Pro monthly.
+- Webhook route `/api/stripe/webhook` (node runtime). Verify signature.
+- On success: set `pro_status = 'pro'`, set limits/credits.
+- Do not store card data; rely on Stripe customer portal for management.
+
+---
+
+## 11) Component Patterns
+
+**Page Layout**
+
+- Marketing: `MarketingLayout` with ad slot regions (header leaderboard, in-article rectangle, optional sticky footer).
+- App: `AppLayout` without ads. Keep UI distraction-free.
+
+**Palette Editor**
+
+- Controlled component, emits `onChange(palette)`.
+- Generates MUI `ThemeOptions` on the client; server action persists on save.
+- Keep to **primary**, **secondary**, **background**, **text** for MVP.
+
+**Upload Widget**
+
+- Use UploadThing.
+- Enforce mime/size limits (e.g., images only, up to 5MB MVP).
+- Show progress; on success call `/api/generate` with `fileUrl`.
+
+---
+
+## 12) Server Action / API Route Templates
+
+### Server Action Template
+
+```ts
+'use server';
+
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { getSessionUser } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { ratelimit } from '@/lib/ratelimit';
+
+const Input = z.object({
+  themeId: z.string().uuid(),
+  palette: z.object({
+    primary: z.string(),
+    secondary: z.string(),
+    background: z.string(),
+    text: z.string(),
+  }),
+});
+
+export async function savePaletteAction(input: z.infer<typeof Input>) {
+  const user = await getSessionUser();
+  if (!user) throw new Error('UNAUTHENTICATED');
+
+  const data = Input.parse(input);
+
+  await ratelimit(user.id, 'save_palette'); // noop in MVP if not implemented
+
+  await db.updateThemePalette({
+    userId: user.id,
+    themeId: data.themeId,
+    palette: data.palette,
+  });
+
+  revalidatePath(`/app/result/${data.themeId}`);
+  return { ok: true };
+}
+```
+
+### Route Handler Template (`/api/generate`)
+
+```ts
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { extractPalette } from '@core/palette/extract';
+import { createThemeRecord } from '@core/data/themes';
+
+export const runtime = 'nodejs'; // ensure node, not edge
+
+const Input = z.object({
+  fileUrl: z.string().url(),
+});
+
+export async function POST(req: NextRequest) {
+  const body = Input.safeParse(await req.json());
+  if (!body.success)
+    return NextResponse.json({ error: 'BAD_REQUEST' }, { status: 400 });
+
+  try {
+    const colors = await extractPalette(body.data.fileUrl);
+    const theme = /* map to MUI ThemeOptions (palette only MVP) */ {
+      palette: {
+        primary: { main: colors.primary },
+        secondary: { main: colors.secondary },
+        background: { default: colors.background },
+        text: { primary: colors.text },
+      },
+      shape: { borderRadius: 8 },
+    };
+
+    const { themeId } = await createThemeRecord({ theme });
+    return NextResponse.json({ themeId, theme });
+  } catch (err) {
+    return NextResponse.json({ error: 'GENERATION_FAILED' }, { status: 500 });
+  }
+}
+```
+
+---
+
+## 13) Data Model (Supabase)
+
+Tables: `users` (managed), `uploads`, `themes`, `payments`, `usage_events`.
+
+**RLS Rules**
+
+- `uploads`, `themes`, `payments`: `user_id = auth.uid()` for select/update/delete.
+- Public read: **disabled** at MVP (except marketing content tables, if any).
+
+---
+
+## 14) DX Prompts (For AI in Cursor)
+
+**Create a Marketing Page**
+
+> Generate a Next App Router page at `/how-it-works` with: H1, 3-step process, FAQ section, JSON-LD FAQ schema, ad containers with fixed sizes (no scripts), and optimized LCP.
+
+**Add an Ad Slot**
+
+> Insert an ad container in the marketing layout with a fixed height (e.g., 90px for leaderboard). Lazy-load the AdSense script after the main content and ensure no CLS.
+
+**Add GA4 Event**
+
+> Add a server-side GA4 event `generate_started` within `/api/generate` including only a category and anonymized size bucket. Ensure consent check before sending client events.
+
+**Add Usage Limit**
+
+> In `/api/generate`, validate that a non-pro user hasn’t exceeded 1 generation for today based on `usage_events`. Respond with 429 if exceeded and suggest upgrading.
+
+**Write Unit Tests**
+
+> Create Vitest tests for `extractPalette` mocking an image and verifying primary/secondary extraction and contrast fallbacks.
+
+---
+
+## 15) Anti-Patterns (Disallow)
+
+- Introducing Redux/Zustand/Jotai for MVP.
+- Rendering ad scripts in app tool routes.
+- Dynamic imports without SSR consideration hurting LCP.
+- Using AI APIs by default for palette extraction (cost control).
+- Storing secrets in client code.
+- Blocking main thread with large image operations on the client.
+
+---
+
+## 16) Review Checklist (PR Template)
+
+- [ ] SEO: metadata, canonical, JSON-LD where relevant
+- [ ] Ads: fixed-size containers, script defers, no CLS
+- [ ] Performance: LCP target < 2.5s (marketing), bundle size check
+- [ ] Security: input validated, RLS safe, no PII in logs
+- [ ] Auth: gated downloads, usage limits respected
+- [ ] Payments: webhook verified, `pro_status` set
+- [ ] Tests: critical paths covered (palette, actions, routes)
+- [ ] Analytics: events added & consent respected
+
+---
+
+## 17) Env Vars (Document in `.env.example`)
+
+```
+NEXT_PUBLIC_SITE_URL=
+NEXT_RUNTIME=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE=
+UPLOADTHING_TOKEN=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+GA4_MEASUREMENT_ID=
+ADSENSE_CLIENT_ID=
+```
+
+---
+
+## 18) Roadmap Flags (MVP+)
+
+- BYOK for AI refinement
+- Public gallery (programmatic SEO)
+- Typography + component density controls
+- Queue + rate limit via Upstash
+- Google Ad Manager upgrade
