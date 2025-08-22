@@ -23,5 +23,8 @@
   },
   "nx": {
     "name": "web-marketing"
+  },
+  "dependencies": {
+    "lottie-react": "^2.4.1"
   }
 }

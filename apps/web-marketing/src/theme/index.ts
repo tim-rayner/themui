@@ -1,5 +1,5 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
-
+//#c8ace9
 // Define the color palette for Themui
 const palette = {
   primary: {
@@ -9,10 +9,10 @@ const palette = {
     contrastText: '#ffffff',
   },
   secondary: {
-    main: '#9c27b0', // Purple accent
-    light: '#ba68c8',
-    dark: '#7b1fa2',
-    contrastText: '#ffffff',
+    main: '#c8ace9', // Purple accent
+    light: '#c8ace9',
+    dark: '#c8ace9',
+    contrastText: '#000000',
   },
   background: {
     default: '#fafafa',
@@ -59,7 +59,7 @@ const typography = {
     '"Segoe UI Symbol"',
   ].join(','),
   h1: {
-    fontSize: '2.5rem',
+    fontSize: '2.25rem',
     fontWeight: 600,
     lineHeight: 1.2,
   },
@@ -160,6 +160,7 @@ const components = {
     styleOverrides: {
       root: {
         boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+        borderRadius: 0,
       },
     },
   },
@@ -178,14 +179,14 @@ const themeOptions: ThemeOptions = {
 export const theme = createTheme(themeOptions);
 
 // Export individual theme parts for potential customization
-export { palette, typography, shape, components };
+export { components, palette, shape, typography };
 
 // Type augmentation for custom theme properties (if needed later)
 declare module '@mui/material/styles' {
-  interface Theme {
-    // Add custom theme properties here if needed
-  }
-  interface ThemeOptions {
-    // Add custom theme options here if needed
-  }
+  // interface Theme {
+  //   // Add custom theme properties here if needed
+  // }
+  // interface ThemeOptions {
+  //   // Add custom theme options here if needed
+  // }
 }
