@@ -1,10 +1,15 @@
-import { HeroSection, Navbar } from '@themui/web-marketing';
+import {
+  HeroSection,
+  Navbar,
+  StartApplicationSection,
+} from '@themui/web-marketing';
 
 export default function Index() {
   return (
-    <div>
+    <>
       <Navbar />
       <HeroSection />
-    </div>
+      <StartApplicationSection />
+    </>
   );
 }

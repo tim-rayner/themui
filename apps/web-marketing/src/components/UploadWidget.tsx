@@ -1,22 +1,22 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  LinearProgress,
-  Alert,
-  TextField,
-  Tabs,
-  Tab,
-} from '@mui/material';
 import {
   CloudUpload,
-  Link as LinkIcon,
   Image as ImageIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  LinearProgress,
+  Paper,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from '@mui/material';
+import React, { useCallback, useState } from 'react';
 
 interface UploadWidgetProps {
   onUpload?: (file: File | string) => void;
@@ -60,46 +60,54 @@ export function UploadWidget({
     }
   }, []);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileUpload(files[0]);
-    }
-  }, []);
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setError(null);
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        handleFileUpload(files[0]);
+      }
+    },
+    []
+  );
 
-  const handleFileUpload = useCallback((file: File) => {
-    // Validate file type
-    if (!acceptedTypes.includes(file.type)) {
-      setError(`File type not supported. Please upload: ${acceptedTypes.join(', ')}`);
-      return;
-    }
+  const handleFileUpload = useCallback(
+    (file: File) => {
+      // Validate file type
+      if (!acceptedTypes.includes(file.type)) {
+        setError(
+          `File type not supported. Please upload: ${acceptedTypes.join(', ')}`
+        );
+        return;
+      }
 
-    // Validate file size
-    if (file.size > maxFileSize * 1024 * 1024) {
-      setError(`File too large. Maximum size: ${maxFileSize}MB`);
-      return;
-    }
+      // Validate file size
+      if (file.size > maxFileSize * 1024 * 1024) {
+        setError(`File too large. Maximum size: ${maxFileSize}MB`);
+        return;
+      }
 
-    setUploading(true);
-    setUploadProgress(0);
-    onUpload?.(file);
+      setUploading(true);
+      setUploadProgress(0);
+      onUpload?.(file);
 
-    // Simulate upload progress (replace with actual upload logic)
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploading(false);
-          // Simulate successful upload
-          const mockUrl = URL.createObjectURL(file);
-          onUploadComplete?.(mockUrl);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-  }, [acceptedTypes, maxFileSize, onUpload, onUploadComplete]);
+      // Simulate upload progress (replace with actual upload logic)
+      const interval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setUploading(false);
+            // Simulate successful upload
+            const mockUrl = URL.createObjectURL(file);
+            onUploadComplete?.(mockUrl);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    },
+    [acceptedTypes, maxFileSize, onUpload, onUploadComplete]
+  );
 
   const handleUrlUpload = useCallback(() => {
     if (!urlInput.trim()) {
@@ -194,7 +202,9 @@ export function UploadWidget({
             <Typography variant="body2" color="text.secondary" paragraph>
               Paste a link to your screenshot
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2, maxWidth: 400, mx: 'auto' }}>
+            <Box
+              sx={{ display: 'flex', gap: 2, mt: 2, maxWidth: 400, mx: 'auto' }}
+            >
               <TextField
                 fullWidth
                 placeholder="https://example.com/screenshot.png"
@@ -229,7 +239,7 @@ export function UploadWidget({
           </Alert>
         )}
 
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+        <Typography variant="caption" sx={{ mt: 2, display: 'block' }}>
           Supported formats: JPG, PNG, WebP • Max size: {maxFileSize}MB
         </Typography>
       </Box>

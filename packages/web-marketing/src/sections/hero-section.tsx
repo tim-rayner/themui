@@ -6,29 +6,23 @@
 
 import { Box, Button, Container, Grid, Stack, Typography } from '@mui/material';
 import { AnimatedPaintRoller } from '../components/lottie/animated-paint-roller';
+import { useSmoothScroll } from '../hooks/useSmoothScroll';
 
 export function HeroSection() {
+  const { scrollToElement } = useSmoothScroll();
+
+  const handleStartCreating = () => {
+    scrollToElement('file-upload-section');
+  };
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
-        overflow: 'hidden',
         pt: { xs: 12, md: 10 }, // Add top padding for fixed navbar
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background:
-            'radial-gradient(circle at 20% 80%, rgba(97, 95, 217, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(11, 203, 168, 0.3) 0%, transparent 50%)',
-          pointerEvents: 'none',
-        },
       }}
     >
       <Container
@@ -59,15 +53,6 @@ export function HeroSection() {
                       md: '4rem',
                       lg: '4.5rem',
                     },
-                    fontWeight: 800,
-                    lineHeight: 1.1,
-                    color: 'white',
-                    mb: 2,
-                    textShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    background: 'linear-gradient(45deg, #fff, #f0f0f0)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
                   }}
                 >
                   Generate MUI Themes
@@ -82,12 +67,7 @@ export function HeroSection() {
                 <Typography
                   variant="h5"
                   sx={{
-                    color: 'rgba(255,255,255,0.9)',
-                    fontWeight: 400,
-                    lineHeight: 1.6,
-                    mb: 4,
                     fontSize: { xs: '1.1rem', md: '1.3rem' },
-                    textShadow: '0 2px 10px rgba(0,0,0,0.1)',
                   }}
                 >
                   Upload a screenshot and instantly get a beautiful,
@@ -106,6 +86,7 @@ export function HeroSection() {
                 <Button
                   variant="contained"
                   size="large"
+                  onClick={handleStartCreating}
                   sx={{
                     py: 2,
                     px: 4,
@@ -147,7 +128,7 @@ export function HeroSection() {
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
-                  Start Creating
+                  Start for free
                 </Button>
 
                 <Button
