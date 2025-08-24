@@ -9,6 +9,11 @@ export function Navbar() {
   const { scrollToElement } = useSmoothScroll();
 
   useEffect(() => {
+    // Check if we're on the client side
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
     const handleScroll = () => {
       setScrolled(document.documentElement.scrollTop > 50);
     };

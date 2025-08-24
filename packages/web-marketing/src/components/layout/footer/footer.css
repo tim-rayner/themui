@@ -1,0 +1,21 @@
+.footer-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #ffd700;
+  transform: translateX(4px);
+}
+
+.footer-author-link {
+  color: #ffd700;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-author-link:hover {
+  text-decoration: underline;
+}
