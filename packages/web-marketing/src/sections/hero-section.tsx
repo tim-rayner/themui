@@ -17,6 +17,7 @@ export function HeroSection() {
 
   return (
     <Box
+      id="top"
       sx={{
         minHeight: '100vh',
         display: 'flex',

@@ -26,6 +26,10 @@ export function Navbar() {
     scrollToElement('file-upload-section');
   };
 
+  const handleScrollToTop = () => {
+    scrollToElement('top');
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -66,6 +70,7 @@ export function Navbar() {
               transform: 'scale(1.05)',
             },
           }}
+          onClick={handleScrollToTop}
         >
           Themui
         </Typography>

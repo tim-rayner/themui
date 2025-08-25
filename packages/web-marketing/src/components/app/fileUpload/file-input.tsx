@@ -152,25 +152,27 @@ export function FileInput({
             onFileSelect={onFileSelect}
             onReset={handleReset}
           />
+
+          {!uploadedFile && (
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  color: '#1a1a1a', // High contrast dark text
+                  opacity: 0.9, // High opacity for better readability
+                  '& strong': {
+                    fontWeight: 600,
+                  },
+                }}
+              >
+                <strong>Supported formats:</strong> JPEG, PNG, WebP •{' '}
+                <strong>Max size:</strong> {formatFileSize(maxFileSize)}
+              </Typography>
+            </Box>
+          )}
         </Stack>
       </Paper>
-
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 500,
-            color: '#1a1a1a', // High contrast dark text
-            opacity: 0.9, // High opacity for better readability
-            '& strong': {
-              fontWeight: 600,
-            },
-          }}
-        >
-          <strong>Supported formats:</strong> JPEG, PNG, WebP •{' '}
-          <strong>Max size:</strong> {formatFileSize(maxFileSize)}
-        </Typography>
-      </Box>
     </Box>
   );
 }
