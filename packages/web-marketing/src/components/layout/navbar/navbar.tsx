@@ -1,15 +1,32 @@
 'use client';
 
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
+import { Logout, Person } from '@mui/icons-material';
+import {
+  AppBar,
+  Avatar,
+  Box,
+  Button,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSmoothScroll } from '../../../hooks/useSmoothScroll';
 
-export function Navbar() {
+interface NavbarProps {
+  isAuthenticated?: boolean;
+  email?: string;
+}
+
+export function Navbar({ isAuthenticated = false, email }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { scrollToElement } = useSmoothScroll();
 
   useEffect(() => {
-    // Check if we're on the client side
     if (typeof window === 'undefined' || typeof document === 'undefined') {
       return;
     }
@@ -30,6 +47,22 @@ export function Navbar() {
     scrollToElement('top');
   };
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      window.location.href = '/api/auth/signout';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -37,7 +70,6 @@ export function Navbar() {
         background: 'transparent',
         transition: 'all 0.3s ease',
         boxShadow: 'none',
-        // Mobile-only blur and shadow effects on scroll
         '@media (max-width: 899px)': {
           ...(scrolled && {
             backdropFilter: 'blur(10px)',
@@ -76,51 +108,114 @@ export function Navbar() {
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Button
-            sx={{
-              color: 'white',
-              borderColor: 'rgba(255,255,255,0.3)',
-              textShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              fontWeight: 600,
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.1)',
-                borderColor: 'white',
-                transform: 'translateY(-1px)',
-              },
-            }}
-            variant="outlined"
-            href="/auth?authType=sign-in"
-          >
-            Sign In
-          </Button>
+          {!isAuthenticated ? (
+            <>
+              <Button
+                sx={{
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'rgba(255,255,255,0.1)',
+                    borderColor: 'white',
+                    transform: 'translateY(-1px)',
+                  },
+                }}
+                variant="outlined"
+                href="/auth?authType=sign-in"
+              >
+                Sign In
+              </Button>
 
-          <Button
-            sx={{
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontWeight: 600,
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              textShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.3)',
-                transform: 'translateY(-1px)',
-                boxShadow: '0 4px 15px rgba(255,255,255,0.2)',
-              },
-            }}
-            variant="contained"
-            onClick={handleStartCreating}
-          >
-            Get Started
-          </Button>
+              <Button
+                sx={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'rgba(255,255,255,0.3)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 15px rgba(255,255,255,0.2)',
+                  },
+                }}
+                variant="contained"
+                onClick={handleStartCreating}
+              >
+                Get Started
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={handleMenuOpen}
+                sx={{
+                  textTransform: 'none',
+                  color: 'white',
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    background: 'rgba(255,255,255,0.2)',
+                  },
+                }}
+              >
+                <Avatar
+                  sx={{ width: 24, height: 24, mr: 1, fontSize: '0.75rem' }}
+                >
+                  {(email ?? 'U').charAt(0).toUpperCase()}
+                </Avatar>
+                <Typography variant="body2" noWrap sx={{ color: 'white' }}>
+                  {email ?? 'User'}
+                </Typography>
+              </Button>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <MenuItem onClick={handleMenuClose}>
+                  <ListItemIcon>
+                    <Person fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Profile</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    handleSignOut();
+                  }}
+                >
+                  <ListItemIcon>
+                    <Logout fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Sign Out</ListItemText>
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

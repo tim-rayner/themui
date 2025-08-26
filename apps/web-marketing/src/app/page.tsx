@@ -1,13 +1,10 @@
-import {
-  HeroSection,
-  Navbar,
-  StartApplicationSection,
-} from '@themui/web-marketing';
+import { NavbarAuthBridge } from '@/components/NavbarAuthBridge';
+import { HeroSection, StartApplicationSection } from '@themui/web-marketing';
 
 export default function Index() {
   return (
     <>
-      <Navbar />
+      <NavbarAuthBridge />
       <HeroSection />
       <StartApplicationSection />
     </>

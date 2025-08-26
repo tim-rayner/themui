@@ -1,11 +1,142 @@
 'use client';
 
+import { signInWithMagicLink, signUpWithMagicLink } from '@/lib/auth/actions';
+import { createClient } from '@/lib/supabase/client';
 import { useAuthType } from '@/utils/useAuthType';
 import { Box } from '@mui/material';
 import { SignIn, SignUp } from '@themui/web-marketing';
+import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function AuthPage() {
   const authType = useAuthType();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get parameters from URL
+  const redirectTo = searchParams.get('redirectTo');
+  const priceId = searchParams.get('priceId');
+  const discountCode = searchParams.get('discountCode');
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+
+      const redirectUrl = new URL('/api/auth/callback', window.location.origin);
+
+      // Add custom parameters to redirect URL
+      if (redirectTo) {
+        redirectUrl.searchParams.set('redirectTo', redirectTo);
+      }
+      if (priceId) {
+        redirectUrl.searchParams.set('priceId', priceId);
+      }
+      if (discountCode) {
+        redirectUrl.searchParams.set('discountCode', discountCode);
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl.toString(),
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGitHubAuth = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+
+      const redirectUrl = new URL('/api/auth/callback', window.location.origin);
+
+      // Add custom parameters to redirect URL
+      if (redirectTo) {
+        redirectUrl.searchParams.set('redirectTo', redirectTo);
+      }
+      if (priceId) {
+        redirectUrl.searchParams.set('priceId', priceId);
+      }
+      if (discountCode) {
+        redirectUrl.searchParams.set('discountCode', discountCode);
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: redirectUrl.toString(),
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailAuth = async (email: string, password?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await signInWithMagicLink({
+        email,
+        redirectTo: redirectTo || undefined,
+        priceId: priceId || undefined,
+        discountCode: discountCode || undefined,
+      });
+
+      if (result.error) {
+        setError(result.error);
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (
+    name: string,
+    email: string,
+    password?: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await signUpWithMagicLink({
+        email,
+        redirectTo: redirectTo ?? undefined,
+        priceId: priceId ?? undefined,
+        discountCode: discountCode ?? undefined,
+      });
+
+      if (result.error) {
+        setError(result.error);
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -64,7 +195,23 @@ export default function AuthPage() {
           zIndex: 1,
         }}
       >
-        {authType === 'sign-in' ? <SignIn /> : <SignUp />}
+        {authType === 'sign-in' ? (
+          <SignIn
+            onSignIn={handleEmailAuth}
+            onGoogleSignIn={handleGoogleAuth}
+            onGitHubSignIn={handleGitHubAuth}
+            loading={loading}
+            error={error ?? undefined}
+          />
+        ) : (
+          <SignUp
+            onSignUp={handleSignUp}
+            onGoogleSignUp={handleGoogleAuth}
+            onGitHubSignUp={handleGitHubAuth}
+            loading={loading}
+            error={error ?? undefined}
+          />
+        )}
       </Box>
 
       {/* CSS animations */}
